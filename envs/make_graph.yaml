@@ -1,0 +1,7 @@
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - make_prg=0.5.0
+  - biopython=1.79
+  - odgi=0.8.3

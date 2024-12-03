@@ -1,0 +1,22 @@
+diff --git a/include.h b/include.h
+index cea9e23..667ce65 100644
+--- a/include.h
++++ b/include.h
+@@ -85,9 +85,13 @@
+ #define TRUE  1
+ 
+ //minmax
+-int MINMAX_tmp_var1,MINMAX_tmp_var2;
+-#define MIN(X,Y) (((MINMAX_tmp_var1=(X)) < (MINMAX_tmp_var2=(Y))) ? \
+-                  (MINMAX_tmp_var1) : (MINMAX_tmp_var2))
+-#define MAXEQ(X,Y) if((MINMAX_tmp_var1=(Y))>(X)) (X)=(MINMAX_tmp_var1)
++#define MIN(a,b)             \
++({                           \
++    __typeof__ (a) _a = (a); \
++    __typeof__ (b) _b = (b); \
++    _a < _b ? _a : _b;       \
++})
++
++#define MAXEQ(X,Y) do { int MINMAX_tmp_var1; if((MINMAX_tmp_var1=(Y))>(X)) (X)=(MINMAX_tmp_var1); } while (0)
+ 
+ /****** EOF (include.h) ******************************************************/

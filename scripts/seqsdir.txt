@@ -1,0 +1,4 @@
+/data/ISMB/escherichia_albertii/core_genes.n100.10-Jan-2023_09-46-03
+/data/ISMB/burkholderia_pseudomallei/core_genes.n100.10-Jan-2023_14-17-59
+/data/ISMB/pseudomonas_aeruginosa/core_genes.n100.10-Jan-2023_09-47-07
+/data/ISMB/streptococcus_pyogenes/core_genes.n100.10-Jan-2023_17-25-51
