@@ -7,7 +7,6 @@ rule all:
         expand(
         "output/cdifficile/full.csv"
         )
-    
     conda: "envs/csvkit.yaml"
     shell:
         """
@@ -36,15 +35,16 @@ rule build_recgraph_a_star:
         """
 
 rule make_graph:
-    output:
+    params:
         gfa_folder= "output/cdifficile/gfa",
+    output:
         gfa_file = "output/cdifficile/gfa/graph.gfa",
     conda: "envs/make_graph.yaml"
     threads: 4
     shadow: "shallow"
     shell:
         """
-        pggb -i data/cdifficile/slpa-basis.fa -o {output.gfa_folder} -n 11 -s 100 -p 50 -K 8 -k 1 -B 10 -G 2750,4500 -P asm5 -d 12 -O 0.5
+        pggb -i data/cdifficile/slpa-basis.fa -o {params.gfa_folder} -n 11 -s 100 -p 50 -K 8 -k 1 -B 10 -G 2750,4500 -P asm5 -d 12 -O 0.5
         cp output/cdifficile/gfa/slpa-basis.fa.3f0681a.b682f59.ebb3f5c.smooth.fix.gfa {output.gfa_file}
         """
 
