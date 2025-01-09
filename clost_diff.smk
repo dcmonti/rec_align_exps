@@ -61,7 +61,7 @@ rule run_recgraph_a_star:
     shell:
         """
         {input.recgraph} \
-            -s 8 -r 4 -k 1 \
+            -s 12 -r 4 -k 1 \
             -q {input.fa} -g {input.gfa} > {output.gaf}
         """  
 

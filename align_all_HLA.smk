@@ -24,7 +24,7 @@ rule all:
         "bin/recgraph_a_star",
         "bin/minichain",
         expand("output/HLA/{mode}/{read_path}.gaf",
-                mode=["ga", "ra", "mc"], 
+                mode=["ga", "ra_c", "ra_s","ra_f","mc"], 
                 read_path=split_read_files
         )
 
@@ -32,7 +32,7 @@ rule build_minichain:
     output:
         "bin/minichain"
     shadow: "shallow"
-    #conda: "envs/rust.yaml"
+    conda: "envs/rust.yaml"
     threads: 4
     shell:
         """
@@ -69,20 +69,45 @@ rule generate_mc_graphs:
     shell:
         "python scripts/mc_fix.py {input.gfa} > {output.w_gfa} "
 
-rule run_recgraph_a_star:
+rule run_recgraph_a_star_chaining:
     input:
         fa="output/HLA/genes/{gene}/{rec}/reads_{err}_split/{read_file}.fa",
         gfa="output/HLA/genes/{gene}/graph.gfa",
         rg = "bin/recgraph_a_star"
     log:
-        "output/HLA/ra/{gene}/{rec}/reads_{err}_split/{read_file}.log"
+        "output/HLA/ra_c/{gene}/{rec}/reads_{err}_split/{read_file}.log"
     output:
-        "output/HLA/ra/{gene}/{rec}/reads_{err}_split/{read_file}.gaf"
+        "output/HLA/ra_c/{gene}/{rec}/reads_{err}_split/{read_file}.gaf"
     shell:
-        "/usr/bin/time -v {input.rg} -q {input.fa} -g {input.gfa} -s 8 -r 4 -k 2 > {output} 2> {log}"
+        "/usr/bin/time -v {input.rg} -q {input.fa} -g {input.gfa} -s 14 -r 4 -k 2 -e chaining> {output} 2> {log}"
+
+rule run_recgraph_a_star_seeding:
+    input:
+        fa="output/HLA/genes/{gene}/{rec}/reads_{err}_split/{read_file}.fa",
+        gfa="output/HLA/genes/{gene}/graph.gfa",
+        rg = "bin/recgraph_a_star"
+    log:
+        "output/HLA/ra_s/{gene}/{rec}/reads_{err}_split/{read_file}.log"
+    output:
+        "output/HLA/ra_s/{gene}/{rec}/reads_{err}_split/{read_file}.gaf"
+    shell:
+        "/usr/bin/time -v {input.rg} -q {input.fa} -g {input.gfa} -s 14 -r 4 -k 2 -e seeding> {output} 2> {log}"
+
+rule run_recgraph_a_star_fast:
+    input:
+        fa="output/HLA/genes/{gene}/{rec}/reads_{err}_split/{read_file}.fa",
+        gfa="output/HLA/genes/{gene}/graph.gfa",
+        rg = "bin/recgraph_a_star"
+    log:
+        "output/HLA/ra_f/{gene}/{rec}/reads_{err}_split/{read_file}.log"
+    output:
+        "output/HLA/ra_f/{gene}/{rec}/reads_{err}_split/{read_file}.gaf"
+    shell:
+        "/usr/bin/time -v {input.rg} -q {input.fa} -g {input.gfa} -s 14 -r 4 -k 2 -e fast> {output} 2> {log}"
 
 rule run_minichain:
     input:
+        minichain="bin/minichain",
         fa="output/HLA/genes/{gene}/{rec}/reads_{err}_split/{read_file}.fa",
         gfa="output/HLA/genes/{gene}/w_graph.gfa",
     log:
@@ -90,7 +115,7 @@ rule run_minichain:
     output:
         "output/HLA/mc/{gene}/{rec}/reads_{err}_split/{read_file}.gaf"
     shell:
-        "/usr/bin/time -v bin/minichain -cx lr {input.gfa} {input.fa} -R 4 -k 12 -w 8 > {output} 2> {log}"
+        "/usr/bin/time -v {input.minichain} -cx lr {input.gfa} {input.fa} -R 4 -k 12 -w 8 > {output} 2> {log}"
 
 rule run_graphaligner:
     input:

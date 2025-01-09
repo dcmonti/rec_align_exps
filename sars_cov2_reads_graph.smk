@@ -27,8 +27,8 @@ rule make_graph:
         rm -rf output/sars-cov-2/rec_haplos.fa
         cat data/sars-cov-2/haplotypes/*.fasta >> {output.haplos}
         cat data/sars-cov-2/rec_haplos/*.fasta >> {output.rec_haplos}
-        pggb -i output/sars-cov-2/haplos.fa -o {params.gfa_folder} -n 11 -s 100 -p 50 -K 8 -k 1 -B 10 -G 2750,4500 -P asm5 -d 12 -O 0.5
-        cp output/sars-cov-2/gfa/haplos.fa.3f0681a.b682f59.ebb3f5c.smooth.fix.gfa {output.gfa_file}
+        pggb -i output/sars-cov-2/haplos.fa -o {params.gfa_folder} -n 20 -s 300
+        cp output/sars-cov-2/gfa/haplos.fa.*.smooth.fix.gfa {output.gfa_file}
         rm -rf output/sars-cov-2/gfa/
         """
 
@@ -60,7 +60,7 @@ rule generate_reads:
         "output/sars-cov-2/sim/sd_00{haplo}.fastq",
     shell:
         """
-        {input.pbsim} --strategy wgs --method qshmm --qshmm bin/QSHMM-ONT-HQ.model --length-min 26000 --length-max 28500 --length-mean 27000  --accuracy-mean .99 --hp-del-bias 10 --depth 100 --genome {input.haplos} --prefix output/sars-cov-2/sim/sd --difference-ratio 2:1:1
+        {input.pbsim} --strategy wgs --method qshmm --qshmm bin/QSHMM-ONT-HQ.model --length-min 15000 --length-max 20000 --length-mean 17500  --accuracy-mean .99 --hp-del-bias 10 --depth 100 --genome {input.haplos} --prefix output/sars-cov-2/sim/sd --difference-ratio 2:1:1
         """
 
 rule generate_rec_reads:
@@ -71,7 +71,7 @@ rule generate_rec_reads:
         "output/sars-cov-2/sim_rec/sd_00{rec_haplo}.fastq",
     shell:
         """
-        {input.pbsim} --strategy wgs --method qshmm --qshmm bin/QSHMM-ONT-HQ.model --length-min 26000 --length-max 28500 --length-mean 27000  --accuracy-mean .99 --hp-del-bias 10 --depth 100 --genome {input.haplos} --prefix output/sars-cov-2/sim_rec/sd --difference-ratio 2:1:1
+        {input.pbsim} --strategy wgs --method qshmm --qshmm bin/QSHMM-ONT-HQ.model --length-min 15000 --length-max 20000 --length-mean 17500  --accuracy-mean .95 --hp-del-bias 10 --depth 100 --genome {input.haplos} --prefix output/sars-cov-2/sim_rec/sd --difference-ratio 2:1:1
         """
 
 rule filter_reads:
@@ -83,7 +83,7 @@ rule filter_reads:
         "output/sars-cov-2/sim/filtered_sd_{haplo}_0001.fastq",
     shell:
         """ 
-        {input.pbsim} --strategy wgs --method sample --sample {input.reads} --genome {input.haplos} --accuracy-min 0.96 --depth 80 --prefix output/sars-cov-2/sim/filtered_sd_{wildcards.haplo} --id-prefix S{wildcards.haplo}_
+        {input.pbsim} --strategy wgs --method sample --sample {input.reads} --genome {input.haplos} --accuracy-min 0.975 --depth 80 --prefix output/sars-cov-2/sim/filtered_sd_{wildcards.haplo} --id-prefix S{wildcards.haplo}_
         """
 
 rule filter_reads_rec:
@@ -95,7 +95,7 @@ rule filter_reads_rec:
         "output/sars-cov-2/sim_rec/filtered_sd_{rec_haplo}_0001.fastq",
     shell:
         """ 
-        {input.pbsim} --strategy wgs --method sample --sample {input.reads} --genome {input.haplos} --accuracy-min 0.96 --depth 80 --prefix output/sars-cov-2/sim_rec/filtered_sd_{wildcards.rec_haplo} --id-prefix S{wildcards.rec_haplo}_
+        {input.pbsim} --strategy wgs --method sample --sample {input.reads} --genome {input.haplos} --accuracy-min 0.975 --depth 80 --prefix output/sars-cov-2/sim_rec/filtered_sd_{wildcards.rec_haplo} --id-prefix S{wildcards.rec_haplo}_
         """
 
 rule convert_reads:

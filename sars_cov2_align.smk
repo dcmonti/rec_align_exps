@@ -81,7 +81,11 @@ rule run_recgraph_a_star:
     output:
         "output/sars-cov-2/ori/ra/{read_file}.gaf"
     shell:
-        "timeout 1m /usr/bin/time -v {input.rg} -q {input.fa} -g {input.gfa} -s 8 -r 4000 -k 0 -m > {output} 2> {log}"
+        """
+        touch {output}
+        touch {log}
+        timeout 2m /usr/bin/time -v {input.rg} -q {input.fa} -g {input.gfa} -s 14 -k 0 -m -e fast > {output} 2> {log}
+        """
 
 rule run_minichain:
     input:
@@ -117,7 +121,7 @@ rule run_recgraph_a_star_r:
     output:
         "output/sars-cov-2/rec/ra/{read_file}.gaf"
     shell:
-        "timeout 1m /usr/bin/time -v {input.rg} -q {input.fa} -g {input.gfa} -s 8 -r 4000 -k 2 -m > {output} 2> {log}"
+        "timeout 2m /usr/bin/time -v {input.rg} -q {input.fa} -g {input.gfa} -s 10 -r 4 -k 2 -m -e fast > {output} 2> {log}"
 
 rule run_minichain_r:
     input:
@@ -129,7 +133,11 @@ rule run_minichain_r:
     output:
         "output/sars-cov-2/rec/mc/{read_file}.gaf"
     shell:
-        "/usr/bin/time -v bin/minichain -cx lr {input.gfa} {input.fa} -R 4 -k 12 -w 8 > {output} 2> {log}"
+        """
+        touch {output}
+        touch {log}
+        /usr/bin/time -v bin/minichain -cx lr {input.gfa} {input.fa} -R 4 -k 12 -w 8 > {output} 2> {log}
+        """
 
 rule run_graphaligner_r:
     input:

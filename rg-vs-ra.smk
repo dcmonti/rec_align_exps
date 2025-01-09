@@ -84,4 +84,4 @@ rule run_recgraph_a_star:
     output:
         "output/HLA/new_recgraph/{gene}/{rec}/reads_{err}_split/{read_file}.gaf"
     shell:
-        "/usr/bin/time -v {input.rg} -q {input.fa} -g {input.gfa} -s 8 -r 4 -k 2 > {output} 2> {log}"
+        "/usr/bin/time -v {input.rg} -q {input.fa} -g {input.gfa} -s 12 -r 4 -k 2 > {output} 2> {log}"
