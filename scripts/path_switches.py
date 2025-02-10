@@ -72,7 +72,8 @@ def extract_path_from_alignment(alignment_file, nodes_in_paths, query, nodes_lab
     with open(alignment_file, "r") as f:
         alignment = f.readline().strip()
         if alignment == "":
-            return 0, len(query)
+            print(alignment_file)
+            return 0, len(query), False
         path = alignment.split("\t")[5]
         path = ">".join(path.split("<"))
         alignment_nodes = path.split(">")[1:]
@@ -90,7 +91,7 @@ def extract_path_from_alignment(alignment_file, nodes_in_paths, query, nodes_lab
         nodes_with_directions = re.findall(r'[><]\d+', alignment.split("\t")[5])
         edit_score = edit_distance_from_path(nodes_with_directions, nodes_label, query)
 
-        return swithces , edit_score
+        return swithces , edit_score, True
 
 def compute_tools_performances(results):
     means_df = pd.DataFrame(columns=["tool", "gene", "mean_edit_score"])
@@ -101,10 +102,17 @@ def compute_tools_performances(results):
             mean_edit_score = results_tool["edit_score"].mean().round(2)
             means_df = means_df._append({"tool": tool, "gene": gene, "mean_edit_score": mean_edit_score}, ignore_index=True)
     means_df.to_csv("output/HLA/mean_edit_scores.csv", index=False)
+    return means_df
         
 if __name__ == "__main__":
     results = pd.DataFrame(columns=["tool", "gene", "rec", "err", "read", "switches", "edit_score"])
+    not_aligned = pd.DataFrame(columns=["tool", "gene", "total_reads", "not_aligned_reads"])
+
     for gene in genes:
+        not_aligned = not_aligned._append({"tool": "GraphAligner", "gene": gene, "total_reads": 0, "not_aligned_reads": 0}, ignore_index=True)
+        not_aligned = not_aligned._append({"tool": "RecAlign", "gene": gene, "total_reads": 0, "not_aligned_reads": 0}, ignore_index=True)
+        not_aligned = not_aligned._append({"tool": "Minichain", "gene": gene, "total_reads": 0, "not_aligned_reads": 0}, ignore_index=True)
+        
         graph_file = f"output/HLA/genes/{gene}/graph.gfa"
         nodes_in_paths, nodes_label = extract_nodes_path(graph_file)
 
@@ -118,12 +126,28 @@ if __name__ == "__main__":
                                 if not line.startswith(">"):
                                     query += line.strip()
                         read_id = re.search(r'read_(\d+)', read).group(1)
-                        switches, edit_score = extract_path_from_alignment(f"output/HLA/ga/{gene}/{rec}/reads_{err}_split/read_{read_id}.gaf", nodes_in_paths, query, nodes_label)
-                        results = results._append({"tool": "GraphAligner","gene": gene, "rec": rec, "err": err, "read": read_id, "switches": switches, "edit_score": edit_score + 4*switches}, ignore_index=True)
-                        switches, edit_score = extract_path_from_alignment(f"output/HLA/ra_f/{gene}/{rec}/reads_{err}_split/read_{read_id}.gaf", nodes_in_paths, query, nodes_label)
-                        results = results._append({"tool": "RecAlign","gene": gene, "rec": rec, "err": err, "read": read_id, "switches": switches, "edit_score": edit_score + 4*switches}, ignore_index=True)
-                        switches, edit_score = extract_path_from_alignment(f"output/HLA/mc/{gene}/{rec}/reads_{err}_split/read_{read_id}.gaf", nodes_in_paths, query, nodes_label)
-                        results = results._append({"tool": "Minichain","gene": gene, "rec": rec, "err": err, "read": read_id, "switches": switches, "edit_score": edit_score + 4*switches}, ignore_index=True)
-        
+                        
+                        switches, edit_score, aligned = extract_path_from_alignment(f"output/HLA/ga/{gene}/{rec}/reads_{err}_split/read_{read_id}.gaf", nodes_in_paths, query, nodes_label)
+                        not_aligned.loc[(not_aligned["tool"] == "GraphAligner") & (not_aligned["gene"] == gene), "total_reads"] += 1
+                        if aligned:
+                            results = results._append({"tool": "GraphAligner","gene": gene, "rec": rec, "err": err, "read": read_id, "switches": switches, "edit_score": edit_score + 4*switches}, ignore_index=True)
+                        else:
+                            not_aligned.loc[(not_aligned["tool"] == "GraphAligner") & (not_aligned["gene"] == gene), "not_aligned_reads"] += 1
+                        
+                        switches, edit_score, aligned = extract_path_from_alignment(f"output/HLA/ra_f/{gene}/{rec}/reads_{err}_split/read_{read_id}.gaf", nodes_in_paths, query, nodes_label)
+                        not_aligned.loc[(not_aligned["tool"] == "RecAlign") & (not_aligned["gene"] == gene), "total_reads"] += 1
+                        if aligned:
+                            results = results._append({"tool": "RecAlign","gene": gene, "rec": rec, "err": err, "read": read_id, "switches": switches, "edit_score": edit_score + 4*switches}, ignore_index=True)
+                        else:
+                            not_aligned.loc[(not_aligned["tool"] == "RecAlign") & (not_aligned["gene"] == gene), "not_aligned_reads"] += 1
+                            
+                        switches, edit_score, aligned = extract_path_from_alignment(f"output/HLA/mc/{gene}/{rec}/reads_{err}_split/read_{read_id}.gaf", nodes_in_paths, query, nodes_label)
+                        not_aligned.loc[(not_aligned["tool"] == "Minichain") & (not_aligned["gene"] == gene), "total_reads"] += 1
+                        if aligned:
+                            results = results._append({"tool": "Minichain","gene": gene, "rec": rec, "err": err, "read": read_id, "switches": switches, "edit_score": edit_score + 4*switches}, ignore_index=True)
+                        else:
+                            not_aligned.loc[(not_aligned["tool"] == "Minichain") & (not_aligned["gene"] == gene), "not_aligned_reads"] += 1
     results.to_csv("output/HLA/switches_edit_scores.csv", index=False)
-    compute_tools_performances(results)
+    not_aligned.to_csv("output/HLA/not_aligned.csv", index=False)
+    means_perf = compute_tools_performances(results)
+    means_perf.set_index(["tool", "gene"]).join(not_aligned.set_index(["tool", "gene"])).to_csv("output/HLA/final_perf.csv")
