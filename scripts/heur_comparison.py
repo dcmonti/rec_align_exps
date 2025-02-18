@@ -87,8 +87,9 @@ def edit_distance_from_cigar(cigar_string):
             edit_distance += length
     return edit_distance
 
-old_times, old_memory, old_edit = parse_logs("output/HLA/ra_f", 0)
-new_times, new_memory, new_edit = parse_logs("output/HLA/ra_s", 0)
+fast_times, fast_memory, fast_edit = parse_logs("output/HLA/ra_f", 0)
+seed_times, seed_memory, seed_edit = parse_logs("output/HLA/ra_s", 0)
+#chain_times, chain_memory, chain_edit = parse_logs("output/HLA/ra_c", 0)
 
 
 data_time = []
@@ -96,22 +97,24 @@ data_memory = []
 
 for gene in genes:
     for mode in modes:
-        for count in range(1, max(len(old_times), len(new_times)) + 1):
-            if (gene, mode, count) in old_times and (gene, mode, count) in new_times:
-                data_time.append((gene, mode, old_times[(gene, mode, count)], "Fast"))
-                data_time.append((gene, mode, new_times[(gene, mode, count)], "Seed"))
+        for count in range(1, max(len(fast_times), len(seed_times)) + 1):
+            if (gene, mode, count) in fast_times and (gene, mode, count) in seed_times:
+                data_time.append((gene, mode, fast_times[(gene, mode, count)], "Fast"))
+                data_time.append((gene, mode, seed_times[(gene, mode, count)], "Seed"))
+                #data_time.append((gene, mode, chain_times[(gene, mode, count)], "Chain"))
 
-            if (gene, mode, count) in old_memory and (gene, mode, count) in new_memory:
-                data_memory.append((gene, mode, old_memory[(gene, mode, count)], "Fast"))
-                data_memory.append((gene, mode, new_memory[(gene, mode, count)], "Seed"))
-
+            if (gene, mode, count) in fast_memory and (gene, mode, count) in seed_memory:
+                data_memory.append((gene, mode, fast_memory[(gene, mode, count)], "Fast"))
+                data_memory.append((gene, mode, seed_memory[(gene, mode, count)], "Seed"))
+                #data_memory.append((gene, mode, chain_memory[(gene, mode, count)], "Chain"))
 
 
 data_edit = []
 
-for gene, mode, count in old_edit:
-    data_edit.append((gene, mode, old_edit[(gene, mode, count)], "Fast"))
-    data_edit.append((gene, mode, new_edit[(gene, mode, count)], "Seed"))
+for gene, mode, count in fast_edit:
+    data_edit.append((gene, mode, fast_edit[(gene, mode, count)], "Fast"))
+    data_edit.append((gene, mode, seed_edit[(gene, mode, count)], "Seed"))
+    #data_edit.append((gene, mode, chain_edit[(gene, mode, count)], "Chain"))
 
 df_edit = pd.DataFrame(data_edit, columns=["Gene", "Mode", "Edit", "Version"])
 
@@ -142,7 +145,7 @@ for j in range(i + 1, len(axes)):
 plt.tight_layout()
 plt.subplots_adjust(hspace=0.4)  # Aumenta lo spazio verticale
 
-plt.savefig("/home/dcmonti/Scaricati/ga-vs-ra_ed_1.png")
+plt.savefig("/home/dcmonti/Scaricati/heur_plots/ga-vs-ra_ed_1.png")
 plt.show()
 
 fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(15, 4.5 * nrows))
@@ -163,7 +166,7 @@ for j in range(i + 1, len(axes)):
 plt.tight_layout()
 plt.subplots_adjust(hspace=0.4)  # Aumenta lo spazio verticale
 
-plt.savefig("/home/dcmonti/Scaricati/ga-vs-ra_ed_2.png")
+plt.savefig("/home/dcmonti/Scaricati/heur_plots/ga-vs-ra_ed_2.png")
 plt.show()
 
 df_time = pd.DataFrame(data_time, columns=["Gene", "Mode", "Time", "Version"])
@@ -186,7 +189,7 @@ for j in range(i + 1, len(axes)):
 plt.tight_layout()
 plt.subplots_adjust(hspace=0.4)  # Aumenta lo spazio verticale
 
-plt.savefig("/home/dcmonti/Scaricati/ga-vs-ra_time_1.png")
+plt.savefig("/home/dcmonti/Scaricati/heur_plots/ga-vs-ra_time_1.png")
 plt.show()
 
 fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(15, 4.5 * nrows))
@@ -207,7 +210,7 @@ for j in range(i + 1, len(axes)):
 plt.tight_layout()
 plt.subplots_adjust(hspace=0.4)  # Aumenta lo spazio verticale
 
-plt.savefig("/home/dcmonti/Scaricati/ga-vs-ra_time_2.png")
+plt.savefig("/home/dcmonti/Scaricati/heur_plots/ga-vs-ra_time_2.png")
 plt.show()
 
 df_memory = pd.DataFrame(data_memory, columns=["Gene", "Mode", "Memory", "Version"])
@@ -229,7 +232,7 @@ for j in range(i + 1, len(axes)):
 plt.tight_layout()
 plt.subplots_adjust(hspace=0.4)  # Aumenta lo spazio verticale
 
-plt.savefig("/home/dcmonti/Scaricati/ga-vs-ra_memory_1.png")
+plt.savefig("/home/dcmonti/Scaricati/heur_plots/ga-vs-ra_memory_1.png")
 plt.show()
 
 fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(15, 4.5 * nrows))
@@ -250,5 +253,5 @@ for j in range(i + 1, len(axes)):
 plt.tight_layout()
 plt.subplots_adjust(hspace=0.4)  # Aumenta lo spazio verticale
 
-plt.savefig("/home/dcmonti/Scaricati/ga-vs-ra_memory_2.png")
+plt.savefig("/home/dcmonti/Scaricati/heur_plots/ga-vs-ra_memory_2.png")
 plt.show()
