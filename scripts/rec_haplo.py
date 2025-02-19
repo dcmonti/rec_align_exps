@@ -21,28 +21,28 @@ sorted_edits.reverse()
 print(sorted_edits)
 haplo1 = haplos[sorted_edits[0][0][0]]
 haplo2 = haplos[sorted_edits[0][0][1]]
-print(sorted_edits[0][0])
+id1, id2 = sorted_edits[0][0]
 
 haplo3 = haplos[sorted_edits[1][0][0]]
 haplo4 = haplos[sorted_edits[1][0][1]]
-print(sorted_edits[1][0])
+id3, id4 = sorted_edits[1][0]
 
 haplo5 = haplos[sorted_edits[2][0][0]]
 haplo6 = haplos[sorted_edits[2][0][1]]
-print(sorted_edits[2][0])
+id5, id6 = sorted_edits[2][0]
 
-rec_haplo1 = haplo1[:int(len(haplo1)/3)] + haplo2[int(len(haplo2)/3):int(len(haplo2)/3)*2] + haplo1[int(len(haplo1)/3)*2:]
-rec_haplo2 = haplo3[:int(len(haplo3)/3)] + haplo4[int(len(haplo4)/3):int(len(haplo4)/3)*2] + haplo3[int(len(haplo3)/3)*2:]
-rec_haplo3 = haplo5[:int(len(haplo5)/3)] + haplo6[int(len(haplo6)/3):int(len(haplo6)/3)*2] + haplo5[int(len(haplo5)/3)*2:]
+rec_haplo1 = haplo1[:int(len(haplo1)/2)] + haplo2[int(len(haplo2)/2):]
+rec_haplo2 = haplo3[:int(len(haplo3)/2)] + haplo4[int(len(haplo4)/2):]
+rec_haplo3 = haplo5[:int(len(haplo5)/2)] + haplo6[int(len(haplo6)/2):]
 
 with open ('data/sars-cov-2/rec_haplos/sequence_r01.fasta', 'w') as f:
-    f.write('>rec_17\n')
+    f.write(f'>rec_{id1}_{id2}\n')
     f.write(rec_haplo1)
 
 with open ('data/sars-cov-2/rec_haplos/sequence_r02.fasta', 'w') as f:
-    f.write('>rec_19\n')
+    f.write(f'>rec_{id3}_{id4}\n')
     f.write(rec_haplo2)
     
 with open ('data/sars-cov-2/rec_haplos/sequence_r03.fasta', 'w') as f:
-    f.write('>rec_14\n')
+    f.write(f'>rec_{id5}_{id6}\n')
     f.write(rec_haplo3)

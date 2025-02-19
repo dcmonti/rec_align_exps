@@ -4,14 +4,15 @@ import seaborn as sns
 
 
 def compute_tools_performances(results):
-    means_df = pd.DataFrame(columns=["tool", "mean_edit_score", "var_edit_score"])
+    means_df = pd.DataFrame(columns=["tool", "type","mean_edit_score", "var_edit_score"])
     tools = results["tool"].unique()
+    types = results["type"].unique()
     for tool in tools:
-        results_tool = results[results["tool"] == tool]
-        mean_edit_score = round(results_tool["edit_score"].mean(),2 )
-        var_edit_score = round(results_tool["edit_score"].std(),2 )
-        
-        means_df = means_df._append({"tool": tool, "mean_edit_score": mean_edit_score, "var_edit_score": var_edit_score}, ignore_index=True)
+        for t in types:
+            results_tool = results[(results["tool"] == tool) & (results["type"] == t)]
+            mean_edit_score = round(results_tool["edit_score"].mean(),2 )
+            var_edit_score = round(results_tool["edit_score"].std(),2 )
+            means_df = means_df._append({"tool": tool, "type": t, "mean_edit_score": mean_edit_score, "var_edit_score": var_edit_score}, ignore_index=True)
     means_df.to_csv("output/sars-cov-2/mean_edit_scores.csv", index=False)
     return means_df
 
@@ -51,8 +52,13 @@ check_correct_path(data)
 remap_tools(data)
 
 
-# plot edit scores for each tool
-sns.boxplot(hue=data["tool"], x="tool", y="edit_score", data=data, showfliers=False)
+# plot edit scores for each tool, dividing in ori and rec
+sns.boxplot(hue=data["type"], x="tool", y="edit_score", data=data, showfliers=False, showmeans=True,
+             meanprops={'marker':'o',
+                       'markerfacecolor':'white', 
+                       'markeredgecolor':'black',
+                       'markersize':'8'})
+
 plt.title("Edit scores for each tool")
 
 plt.savefig("output/sars-cov-2/edit_scores.png")
@@ -83,12 +89,22 @@ data["error_rate"] = data["error_rate"].apply(lambda x: round(x*200)/200)
 sns.boxplot(hue=data["tool"], x="error_rate", y="time", data=data, showfliers=False)
 plt.show()
 
-#table with correct path for each tool (omly for original reads)
+# confusion matrix for number of switches for each tool
+recomb_prediction = pd.DataFrame(columns=["tool", "predicted", "truth"])
+for index, row in data.iterrows():
+    truth = 0 if row["type"] == "ori" else 1
+    pred = 0 if row["switches"] == 0 else 1
+    recomb_prediction = recomb_prediction._append({"tool": row["tool"], "predicted": pred, "truth": truth}, ignore_index=True)
+    
+confusion_matrix = recomb_prediction.groupby(["tool", "predicted", "truth"]).size().unstack(fill_value=0)
+
+
+data_rec = data[data["type"] == "rec"]
+print(len(data_rec))
 data = data[data["type"] == "ori"]
 correct_paths = data[data["correct_path"] == True]
 correct_paths = correct_paths[["tool", "correct_path"]]
 correct_paths = correct_paths.groupby("tool").count()
 correct_paths = correct_paths.rename(columns={"correct_path": "correct_paths"})
 correct_paths["total_reads"] = data.groupby("tool").count()["read"]
-#correct_paths["correct_paths"] = correct_paths["correct_paths"]/correct_paths["total_reads"]
 print(correct_paths)

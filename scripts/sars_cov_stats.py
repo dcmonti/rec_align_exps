@@ -74,7 +74,12 @@ def extract_path_from_alignment(alignment_file, nodes_in_paths, query, nodes_lab
                     alignment_paths = common_paths
         nodes_with_directions = re.findall(r'[><]\d+', alignment.split("\t")[5])
         edit_score = edit_distance_from_path(nodes_with_directions, nodes_label, query, path_start, path_end)
-
+        # read next line if exists
+        if tool == "ra":
+            notes = f.readline().strip().split("\t")
+            paths = notes[3].split(",")
+            if len(paths) > 1:
+                print("More than one path")
         return swithces , edit_score, True, alignment_paths
     
 def extract_time_mem(log_file):

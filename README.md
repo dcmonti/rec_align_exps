@@ -1,26 +1,9 @@
 
-### Data
-In our experiments we selected 5 species from [panX](https://pangenome.org) but these scripts can be used with any specie.
-
-```bash
-# Get a .msa from pangenome.org
-wget https://data.master.pangenome.org/dataset/Burkholderia_pseudomallei/core_gene_alignments.zip
-unzip -q core_gene_alignments.zip
-cd core_genes
-# Remove proteins
-rm *_aa_aln.fa
-# Removes .msa with fewer strains (not needed)
-# n=... ; grep -c "^>" *.fa | grep -v ":${n}" | cut -f1 -d':' | xargs rm
-# Removes / and - from headers since they break everything
-for fa in $(ls *.fa) ; do sed -i "s/\//-/g;s/|/-/g" $fa ; samtools faidx $fa ; done
-cd ..
-```
-
 ### Software
-1. Install [RecGraph](https://github.com/AlgoLab/RecGraph)
+1. Install [RecGraph](https://github.com/AlgoLab/RecGraph/tree/a_star)
 2. All other dependencies are available on conda
 ```
-mamba create -c bioconda -n rg-exps snakemake-minimal make_prg pandas seaborn biopython graphaligner vg odgi pggb samtools
+mamba create -c bioconda -n rg-exps --file requirements.txt
 ```
 
 ### Experiment 1

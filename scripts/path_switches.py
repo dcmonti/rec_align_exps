@@ -103,9 +103,33 @@ def compute_tools_performances(results):
             means_df = means_df._append({"tool": tool, "gene": gene, "mean_edit_score": mean_edit_score}, ignore_index=True)
     means_df.to_csv("output/HLA/mean_edit_scores.csv", index=False)
     return means_df
-        
+
+def compute_tools_performances2(results):
+    means_df = pd.DataFrame(columns=["tool", "gene", "mean_time", "mean_memory"])
+    for gene in genes:
+        results_gene = results[results["gene"] == gene]
+        for tool in ["GraphAligner", "RecAlign", "Minichain"]:
+            results_tool = results_gene[results_gene["tool"] == tool]
+            mean_time = results_tool["time"].mean().round(2)
+            mean_memory = results_tool["memory"].mean().round(2)
+            means_df = means_df._append({"tool": tool, "gene": gene, "mean_time": mean_time, "mean_memory": mean_memory}, ignore_index=True)
+    means_df.to_csv("output/HLA/mean_time_mem.csv", index=False)
+    return means_df
+
+def extract_time_mem(log_file):
+    time = 0
+    memory = 0
+    with open(log_file, "r") as f:
+        for line in f:
+            if "User time (seconds)" in line:
+                time = float(line.split(":")[1].strip())
+            elif "Maximum resident set size (kbytes)" in line:
+                memory = float(line.split(":")[1].strip())
+    return time, memory
+
 if __name__ == "__main__":
     results = pd.DataFrame(columns=["tool", "gene", "rec", "err", "read", "switches", "edit_score"])
+    performances = pd.DataFrame(columns=["tool", "gene",  "rec", "err", "read","time", "memory"])
     not_aligned = pd.DataFrame(columns=["tool", "gene", "total_reads", "not_aligned_reads"])
 
     for gene in genes:
@@ -128,26 +152,34 @@ if __name__ == "__main__":
                         read_id = re.search(r'read_(\d+)', read).group(1)
                         
                         switches, edit_score, aligned = extract_path_from_alignment(f"output/HLA/ga/{gene}/{rec}/reads_{err}_split/read_{read_id}.gaf", nodes_in_paths, query, nodes_label)
+                        time, memory = extract_time_mem(f"output/HLA/ga/{gene}/{rec}/reads_{err}_split/read_{read_id}.log")
                         not_aligned.loc[(not_aligned["tool"] == "GraphAligner") & (not_aligned["gene"] == gene), "total_reads"] += 1
                         if aligned:
                             results = results._append({"tool": "GraphAligner","gene": gene, "rec": rec, "err": err, "read": read_id, "switches": switches, "edit_score": edit_score + 4*switches}, ignore_index=True)
+                            performances = performances._append({"tool": "GraphAligner","gene": gene, "rec": rec, "err":err, "read": read_id, "time": time, "memory": memory}, ignore_index=True)
                         else:
                             not_aligned.loc[(not_aligned["tool"] == "GraphAligner") & (not_aligned["gene"] == gene), "not_aligned_reads"] += 1
                         
                         switches, edit_score, aligned = extract_path_from_alignment(f"output/HLA/ra_f/{gene}/{rec}/reads_{err}_split/read_{read_id}.gaf", nodes_in_paths, query, nodes_label)
+                        time, memory = extract_time_mem(f"output/HLA/ra_f/{gene}/{rec}/reads_{err}_split/read_{read_id}.log")
                         not_aligned.loc[(not_aligned["tool"] == "RecAlign") & (not_aligned["gene"] == gene), "total_reads"] += 1
                         if aligned:
                             results = results._append({"tool": "RecAlign","gene": gene, "rec": rec, "err": err, "read": read_id, "switches": switches, "edit_score": edit_score + 4*switches}, ignore_index=True)
+                            performances = performances._append({"tool": "RecAlign","gene": gene, "rec": rec, "err":err, "read": read_id, "time": time, "memory": memory}, ignore_index=True)
                         else:
                             not_aligned.loc[(not_aligned["tool"] == "RecAlign") & (not_aligned["gene"] == gene), "not_aligned_reads"] += 1
                             
                         switches, edit_score, aligned = extract_path_from_alignment(f"output/HLA/mc/{gene}/{rec}/reads_{err}_split/read_{read_id}.gaf", nodes_in_paths, query, nodes_label)
+                        time, memory = extract_time_mem(f"output/HLA/mc/{gene}/{rec}/reads_{err}_split/read_{read_id}.log")
                         not_aligned.loc[(not_aligned["tool"] == "Minichain") & (not_aligned["gene"] == gene), "total_reads"] += 1
                         if aligned:
                             results = results._append({"tool": "Minichain","gene": gene, "rec": rec, "err": err, "read": read_id, "switches": switches, "edit_score": edit_score + 4*switches}, ignore_index=True)
+                            performances = performances._append({"tool": "Minichain","gene": gene, "rec": rec, "err":err, "read": read_id, "time": time, "memory": memory}, ignore_index=True)
                         else:
                             not_aligned.loc[(not_aligned["tool"] == "Minichain") & (not_aligned["gene"] == gene), "not_aligned_reads"] += 1
     results.to_csv("output/HLA/switches_edit_scores.csv", index=False)
+    performances.to_csv("output/HLA/time_mem.csv", index=False)
     not_aligned.to_csv("output/HLA/not_aligned.csv", index=False)
     means_perf = compute_tools_performances(results)
     means_perf.set_index(["tool", "gene"]).join(not_aligned.set_index(["tool", "gene"])).to_csv("output/HLA/final_perf.csv")
+    means_time_mem = compute_tools_performances2(performances)

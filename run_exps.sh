@@ -1,6 +1,7 @@
 #!/bin/bash
 
 rm -rf output
+snakemake -s clost_diff.smk -c 4
 bash get_HLA_full.sh
 snakemake -s generate_HLA_reads.smk -c 4
 bash split_reads.sh
